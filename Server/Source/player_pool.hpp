@@ -1659,6 +1659,13 @@ struct PlayerPool final : public IPlayerPool, public NetworkEventHandler, public
 
 	Pair<NewConnectionResult, IPlayer*> requestPlayer(int playerID, const PeerNetworkData& netData, const PeerRequestParams& params) override
 	{
+		IPlayer* player = nullptr;
+				
+		player = storage.get(playerID);
+		if(player) {
+			return { NewConnectionResult_NoPlayerSlot, nullptr };
+		}
+				
 		if (params.bot && botList.size() >= *maxBots)
 		{
 			return { NewConnectionResult_NoPlayerSlot, nullptr };
@@ -1671,7 +1678,7 @@ struct PlayerPool final : public IPlayerPool, public NetworkEventHandler, public
 
 		auto poolID = storage.claimHint(playerID, *this, netData, params, useAllAnimations_, validateAnimations_, allowInteriorWeapons_, fixesComponent_);
 		
-		IPlayer* player = storage.get(poolID);
+		player = storage.get(poolID);
 		if(!player) {
 			return { NewConnectionResult_NoPlayerSlot, nullptr };
 		}
