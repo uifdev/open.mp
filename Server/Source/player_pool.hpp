@@ -1660,9 +1660,15 @@ struct PlayerPool final : public IPlayerPool, public NetworkEventHandler, public
 	Pair<NewConnectionResult, IPlayer*> requestPlayer(int playerID, const PeerNetworkData& netData, const PeerRequestParams& params) override
 	{
 		Player* player = nullptr;
+
+		if(playerID < 0 || playerID >= PLAYER_POOL_SIZE) {
+			core.logLn(LogLevel::Debug,"Player ID %d is invalid",playerID);
+			return { NewConnectionResult_NoPlayerSlot, nullptr };
+		}
 				
 		player = storage.get(playerID);
 		if(player) {
+			core.logLn(LogLevel::Debug,"Player ID %d already has a player object",playerID);
 			return { NewConnectionResult_NoPlayerSlot, nullptr };
 		}
 				
@@ -1680,10 +1686,12 @@ struct PlayerPool final : public IPlayerPool, public NetworkEventHandler, public
 		
 		player = storage.get(poolID);
 		if(!player) {
+			core.logLn(LogLevel::Debug,"Couldn't create a player object for player ID %d",playerID);
 			return { NewConnectionResult_NoPlayerSlot, nullptr };
 		}
 
 		if (poolID != playerID) {
+			core.logLn(LogLevel::Debug,"Player ID %d does not match pool ID %d",playerID,poolID);
 			storage.remove(poolID);
 			return { NewConnectionResult_NoPlayerSlot, nullptr };
 		}
