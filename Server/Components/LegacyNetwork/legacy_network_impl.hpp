@@ -72,21 +72,9 @@ public:
 
 	void disconnect(const IPlayer& peer) override
 	{
-		const PeerNetworkData& netData = peer.getNetworkData();
-		if (netData.network != this)
-		{
-			return;
-		}
-
-		const PeerNetworkData::NetworkID& nid = netData.networkID;
-		const RakNet::PlayerID rid { unsigned(nid.address.v4), nid.port };
-
-		const int playerIndex = rakNetServer.GetIndexFromPlayerID(rid);
-		if (playerIndex >= 0 && playerIndex < PLAYER_POOL_SIZE)
-		{
-			playerFromRakIndex[playerIndex] = nullptr;
-		}
-		rakNetServer.Kick(rid);
+		auto playerID = peer->getID();
+		const RakNet::PlayerID rakNetPlayerID = rakNetServer.GetPlayerIDFromIndex(playerID);
+		rakNetServer.Kick(rakNetPlayerID);
 	}
 
 	bool broadcastPacket(Span<uint8_t> data, int channel, const IPlayer* exceptPeer, bool dispatchEvents) override
