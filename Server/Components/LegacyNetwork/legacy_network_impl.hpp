@@ -37,7 +37,6 @@ private:
 	ICore* core = nullptr;
 	Query query;
 	RakNet::RakServerInterface& rakNetServer;
-	std::array<IPlayer*, PLAYER_POOL_SIZE> playerFromRakIndex;
 	std::array<RakNet::RakPeer::RemoteSystemStruct*, PLAYER_POOL_SIZE> playerRemoteSystem;
 	Milliseconds cookieSeedTime;
 	TimePoint lastCookieSeed;
@@ -72,8 +71,7 @@ public:
 
 	void disconnect(const IPlayer& peer) override
 	{
-		auto playerID = peer->getID();
-		const RakNet::PlayerID rakNetPlayerID = rakNetServer.GetPlayerIDFromIndex(playerID);
+		const RakNet::PlayerID rakNetPlayerID = rakNetServer.GetPlayerIDFromIndex((int)peer->getID());
 		rakNetServer.Kick(rakNetPlayerID);
 	}
 
