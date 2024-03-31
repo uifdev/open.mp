@@ -320,10 +320,6 @@ IPlayer* RakNetLegacyNetwork::OnPeerConnect(RakNet::RPCParameters* rpcParams, bo
 	const RakNet::PlayerID rakNetPlayerID = rpcParams->sender;
 	int playerID = rakNetServer.GetIndexFromPlayerID(rakNetPlayerID);
 
-	if(playerID < 0 || playerID >= PLAYER_POOL_SIZE) {
-		return nullptr;
-	}
-
 	PeerNetworkData netData {};
 	netData.networkID.address.ipv6 = false;
 	netData.networkID.address.v4 = rakNetPlayerID.binaryAddress;
