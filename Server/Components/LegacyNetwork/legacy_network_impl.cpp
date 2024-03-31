@@ -326,8 +326,8 @@ IPlayer* RakNetLegacyNetwork::OnPeerConnect(RakNet::RPCParameters* rpcParams, bo
 
 	PeerNetworkData netData {};
 	netData.networkID.address.ipv6 = false;
-	netData.networkID.address.v4 = rid.binaryAddress;
-	netData.networkID.port = rid.port;
+	netData.networkID.address.v4 = rakNetPlayerID.binaryAddress;
+	netData.networkID.port = rakNetPlayerID.port;
 	netData.network = this;
 
 	Pair<NewConnectionResult, IPlayer*> newConnectionResult { NewConnectionResult_Ignore, nullptr };
@@ -515,7 +515,7 @@ void RakNetLegacyNetwork::OnNPCConnect(RakNet::RPCParameters* rpcParams, void* e
 
 void RakNetLegacyNetwork::OnRakNetDisconnect(RakNet::PlayerIndex playerID, PeerDisconnectReason reason)
 {
-	IPlayer* player = core->getPlayers()->get(playerID);
+	IPlayer* player = core->getPlayers().get(playerID);
 
 	if (!player)
 	{
@@ -531,7 +531,7 @@ void RakNetLegacyNetwork::RPCHook(RakNet::RPCParameters* rpcParams, void* extra)
 {
 	RakNetLegacyNetwork* network = reinterpret_cast<RakNetLegacyNetwork*>(extra);
 	
-	IPlayer* player = core->getPlayers()->get(rpcParams->senderId);
+	IPlayer* player = network->core->getPlayers().get(rpcParams->senderIndex);
 	if(!player) return;
 
 	NetworkBitStream bs = GetBitStream(*rpcParams);
@@ -872,7 +872,7 @@ void RakNetLegacyNetwork::onTick(Microseconds elapsed, TimePoint now)
 {
 	for (RakNet::Packet* pkt = rakNetServer.Receive(); pkt; pkt = rakNetServer.Receive())
 	{
-		IPlayer* player = core->getPlayers->get(pkt->playerIndex);
+		IPlayer* player = core->getPlayers.get(pkt->playerIndex);
 		if (player)
 		{
 			NetworkBitStream bs(pkt->data, pkt->length, false);
