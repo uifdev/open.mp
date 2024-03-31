@@ -862,7 +862,7 @@ void RakNetLegacyNetwork::onTick(Microseconds elapsed, TimePoint now)
 {
 	for (RakNet::Packet* pkt = rakNetServer.Receive(); pkt; pkt = rakNetServer.Receive())
 	{
-		IPlayer* player = core->getPlayers.get(pkt->playerIndex);
+		IPlayer* player = core.getPlayers.get(pkt->playerIndex);
 		if (player)
 		{
 			NetworkBitStream bs(pkt->data, pkt->length, false);
