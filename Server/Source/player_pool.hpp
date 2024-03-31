@@ -1659,7 +1659,7 @@ struct PlayerPool final : public IPlayerPool, public NetworkEventHandler, public
 
 	Pair<NewConnectionResult, IPlayer*> requestPlayer(int playerID, const PeerNetworkData& netData, const PeerRequestParams& params) override
 	{
-		IPlayer* player = nullptr;
+		Player* player = nullptr;
 				
 		player = storage.get(playerID);
 		if(player) {
