@@ -418,7 +418,6 @@ void RakNetLegacyNetwork::OnPlayerConnect(RakNet::RPCParameters* rpcParams, void
 				return;
 			}
 
-			remoteSystem->isLogon = true;
 			IPlayer* newPeer = network->OnPeerConnect(rpcParams, false, serial, playerConnectRPC.VersionNumber, playerConnectRPC.VersionString, playerConnectRPC.ChallengeResponse, playerConnectRPC.Name, playerConnectRPC.IsUsingOfficialClient);
 			if (newPeer)
 			{
@@ -446,21 +445,22 @@ void RakNetLegacyNetwork::OnPlayerConnect(RakNet::RPCParameters* rpcParams, void
 				network->networkEventDispatcher.dispatch(&NetworkEventHandler::onPeerConnect, *newPeer);
 
 				network->playerRemoteSystem[newPeer->getID()] = remoteSystem;
-				return;
+				remoteSystem->isLogon = true;
 			}
 			else
 			{
+				PeerAddress address;
+				address.v4 = rpcParams->sender.binaryAddress;
+				address.ipv6 = false;
+
+				PeerAddress::AddressString addressString;
+				PeerAddress::ToString(address, addressString);
+
+				network->core->logLn(LogLevel::Debug, "Kicking client connecting from %.*s", int(addressString.length()), addressString.data());
 				network->rakNetServer.Kick(rpcParams->sender);
 			}
 		}
-		else
-		{
-			network->rakNetServer.Kick(rpcParams->sender);
-		}
-		return;
 	}
-
-	network->rakNetServer.Kick(rpcParams->sender);
 }
 
 void RakNetLegacyNetwork::OnNPCConnect(RakNet::RPCParameters* rpcParams, void* extra)
@@ -479,7 +479,6 @@ void RakNetLegacyNetwork::OnNPCConnect(RakNet::RPCParameters* rpcParams, void* e
 		NetCode::RPC::NPCConnect NPCConnectRPC;
 		if (NPCConnectRPC.read(bs))
 		{
-			remoteSystem->isLogon = true;
 			IPlayer* newPeer = network->OnPeerConnect(rpcParams, true, "", NPCConnectRPC.VersionNumber, "npc", NPCConnectRPC.ChallengeResponse, NPCConnectRPC.Name);
 			if (newPeer)
 			{
@@ -505,12 +504,14 @@ void RakNetLegacyNetwork::OnNPCConnect(RakNet::RPCParameters* rpcParams, void* e
 				}
 
 				network->networkEventDispatcher.dispatch(&NetworkEventHandler::onPeerConnect, *newPeer);
-				return;
+				remoteSystem->isLogon = true;
+			}
+			else 
+			{
+				network->rakNetServer.Kick(rpcParams->sender);
 			}
 		}
 	}
-
-	network->rakNetServer.Kick(rpcParams->sender);
 }
 
 void RakNetLegacyNetwork::OnRakNetDisconnect(RakNet::PlayerIndex playerID, PeerDisconnectReason reason)
@@ -519,6 +520,7 @@ void RakNetLegacyNetwork::OnRakNetDisconnect(RakNet::PlayerIndex playerID, PeerD
 
 	if (!player)
 	{
+		core->logLn(LogLevel::Debug,"Player %d disconnected and has no player object!",playerID);
 		return;
 	}
 
