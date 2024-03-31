@@ -1053,7 +1053,7 @@ struct IPlayerPool : public IExtensible, public IReadOnlyPool<IPlayer>
 	virtual void createExplosionForAll(Vector3 vec, int type, float radius) = 0;
 
 	/// Request a new player with the given network parameters
-	virtual Pair<NewConnectionResult, IPlayer*> requestPlayer(const PeerNetworkData& netData, const PeerRequestParams& params) = 0;
+	virtual Pair<NewConnectionResult, IPlayer*> requestPlayer(int playerID, const PeerNetworkData& netData, const PeerRequestParams& params) = 0;
 
 	/// Attempt to broadcast an packet derived from NetworkPacketBase to all peers
 	/// @param data The data span with the length in BITS
