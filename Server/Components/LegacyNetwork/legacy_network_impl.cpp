@@ -326,13 +326,6 @@ IPlayer* RakNetLegacyNetwork::OnPeerConnect(RakNet::RPCParameters* rpcParams, bo
 	netData.networkID.port = rakNetPlayerID.port;
 	netData.network = this;
 
-	PeerAddress address;
-	address.v4 = rpcParams->sender.binaryAddress;
-	address.ipv6 = false;
-	PeerAddress::AddressString addressString;
-	PeerAddress::ToString(address, addressString);
-	network->core->logLn(LogLevel::Debug, "Client connecting from %.*s requests to join the game.", int(addressString.length()), addressString.data());
-
 	Pair<NewConnectionResult, IPlayer*> newConnectionResult { NewConnectionResult_Ignore, nullptr };
 
 	const bool isDL = version == LegacyClientVersion_03DL && (SAMPRakNet::GetToken() == (challenge ^ LegacyClientVersion_03DL));
@@ -387,7 +380,6 @@ void RakNetLegacyNetwork::OnPlayerConnect(RakNet::RPCParameters* rpcParams, void
 		NetCode::RPC::PlayerConnect playerConnectRPC;
 		if (playerConnectRPC.read(bs))
 		{
-
 			bool serialIsInvalid = true;
 			String serial;
 			ttmath::UInt<100> serialNumber;
@@ -407,19 +399,20 @@ void RakNetLegacyNetwork::OnPlayerConnect(RakNet::RPCParameters* rpcParams, void
 
 			const bool versionIsInvalid = (playerConnectRPC.VersionString.length() > 24);
 
+			PeerAddress address;
+			PeerAddress::AddressString addressString;
+			address.v4 = rpcParams->sender.binaryAddress;
+			address.ipv6 = false;
+			PeerAddress::ToString(address, addressString);
+
 			if (serialIsInvalid || versionIsInvalid)
 			{
-				PeerAddress address;
-				address.v4 = rpcParams->sender.binaryAddress;
-				address.ipv6 = false;
-
-				PeerAddress::AddressString addressString;
-				PeerAddress::ToString(address, addressString);
-
 				network->core->logLn(LogLevel::Warning, "Invalid client connecting from %.*s", int(addressString.length()), addressString.data());
 				network->rakNetServer.Kick(rpcParams->sender);
 				return;
 			}
+			
+			network->core->logLn(LogLevel::Debug, "Client connecting from %.*s requests to join the game.", int(addressString.length()), addressString.data());
 
 			IPlayer* newPeer = network->OnPeerConnect(rpcParams, false, serial, playerConnectRPC.VersionNumber, playerConnectRPC.VersionString, playerConnectRPC.ChallengeResponse, playerConnectRPC.Name, playerConnectRPC.IsUsingOfficialClient);
 			if (newPeer)
