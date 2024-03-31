@@ -1657,7 +1657,7 @@ struct PlayerPool final : public IPlayerPool, public NetworkEventHandler, public
 		}
 	}
 
-	Pair<NewConnectionResult, IPlayer*> requestPlayer(const PeerNetworkData& netData, const PeerRequestParams& params) override
+	Pair<NewConnectionResult, IPlayer*> requestPlayer(int playerID, const PeerNetworkData& netData, const PeerRequestParams& params) override
 	{
 		if (params.bot && botList.size() >= *maxBots)
 		{
@@ -1669,17 +1669,24 @@ struct PlayerPool final : public IPlayerPool, public NetworkEventHandler, public
 			return { NewConnectionResult_BadName, nullptr };
 		}
 
-		Player* result = storage.emplace(*this, netData, params, useAllAnimations_, validateAnimations_, allowInteriorWeapons_, fixesComponent_);
-		if (!result)
-		{
+		auto poolID = storage.claimHint(playerID, *this, netData, params, useAllAnimations_, validateAnimations_, allowInteriorWeapons_, fixesComponent_);
+		
+		IPlayer* player = storage.get(poolID);
+		if(!player) {
 			return { NewConnectionResult_NoPlayerSlot, nullptr };
 		}
 
-		auto& secondaryPool = result->isBot_ ? botList : playerList;
-		secondaryPool.emplace(result);
+		if (poolID != playerID) {
+			storage.remove(poolID);
+			return { NewConnectionResult_NoPlayerSlot, nullptr };
+		}
 
-		initPlayer(*result);
-		return { NewConnectionResult_Success, result };
+		auto& secondaryPool = player->isBot_ ? botList : playerList;
+		secondaryPool.emplace(player);
+
+		initPlayer(*player);
+				
+		return { NewConnectionResult_Success, player };
 	}
 
 	void onPeerConnect(IPlayer& peer) override
