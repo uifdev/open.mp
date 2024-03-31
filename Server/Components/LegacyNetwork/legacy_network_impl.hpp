@@ -71,7 +71,7 @@ public:
 
 	void disconnect(const IPlayer& peer) override
 	{
-		const RakNet::PlayerID rakNetPlayerID = rakNetServer.GetPlayerIDFromIndex((int)peer->getID());
+		const RakNet::PlayerID rakNetPlayerID = rakNetServer.GetPlayerIDFromIndex((int)peer.getID());
 		rakNetServer.Kick(rakNetPlayerID);
 	}
 
