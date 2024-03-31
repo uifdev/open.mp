@@ -316,11 +316,11 @@ enum LegacyClientVersion
 
 IPlayer* RakNetLegacyNetwork::OnPeerConnect(RakNet::RPCParameters* rpcParams, bool isNPC, StringView serial, uint32_t version, StringView versionName, uint32_t challenge, StringView name, bool isUsingOfficialClient)
 {
-	const RakNet::PlayerID rid = rpcParams->sender;
+	IPlayer* player = nullptr;
+	const RakNet::PlayerID rakNetPlayerID = rpcParams->sender;
+	int playerID = rakNetServer.GetIndexFromPlayerID(rakNetPlayerID);
 
-	if (playerFromRakIndex[rpcParams->senderIndex])
-	{
-		// Connection already exists
+	if(playerID < 0 || playerID >= PLAYER_POOL_SIZE) {
 		return nullptr;
 	}
 
@@ -345,7 +345,8 @@ IPlayer* RakNetLegacyNetwork::OnPeerConnect(RakNet::RPCParameters* rpcParams, bo
 		params.bot = isNPC;
 		params.serial = serial;
 		params.isUsingOfficialClient = isUsingOfficialClient;
-		newConnectionResult = core->getPlayers().requestPlayer(netData, params);
+		newConnectionResult = core->getPlayers().requestPlayer(playerID, netData, params);
+		player = newConnectionResult.second;
 	}
 	else
 	{
@@ -359,19 +360,12 @@ IPlayer* RakNetLegacyNetwork::OnPeerConnect(RakNet::RPCParameters* rpcParams, bo
 			// Entry denied, send reason and disconnect
 			RakNet::BitStream bss;
 			bss.Write(uint8_t(newConnectionResult.first));
-			rakNetServer.RPC(130, &bss, RakNet::HIGH_PRIORITY, RakNet::UNRELIABLE, 0, rid, false, false, RakNet::UNASSIGNED_NETWORK_ID, nullptr);
-
-			if (newConnectionResult.first != NewConnectionResult_VersionMismatch)
-			{
-				rakNetServer.Kick(rid);
-			}
+			rakNetServer.RPC(130, &bss, RakNet::HIGH_PRIORITY, RakNet::UNRELIABLE, 0, rakNetPlayerID, false, false, RakNet::UNASSIGNED_NETWORK_ID, nullptr);
 		}
 		return nullptr;
 	}
 
-	playerFromRakIndex[rpcParams->senderIndex] = newConnectionResult.second;
-
-	return newConnectionResult.second;
+	return player;
 }
 
 void RakNetLegacyNetwork::OnPlayerConnect(RakNet::RPCParameters* rpcParams, void* extra)
@@ -454,6 +448,10 @@ void RakNetLegacyNetwork::OnPlayerConnect(RakNet::RPCParameters* rpcParams, void
 				network->playerRemoteSystem[newPeer->getID()] = remoteSystem;
 				return;
 			}
+			else
+			{
+				network->rakNetServer.Kick(rpcParams->sender);
+			}
 		}
 		else
 		{
@@ -515,16 +513,15 @@ void RakNetLegacyNetwork::OnNPCConnect(RakNet::RPCParameters* rpcParams, void* e
 	network->rakNetServer.Kick(rpcParams->sender);
 }
 
-void RakNetLegacyNetwork::OnRakNetDisconnect(RakNet::PlayerIndex rid, PeerDisconnectReason reason)
+void RakNetLegacyNetwork::OnRakNetDisconnect(RakNet::PlayerIndex playerID, PeerDisconnectReason reason)
 {
-	IPlayer* player = playerFromRakIndex[rid];
+	IPlayer* player = core->getPlayers()->get(playerID);
 
 	if (!player)
 	{
 		return;
 	}
 
-	playerFromRakIndex[rid] = nullptr;
 	playerRemoteSystem[player->getID()] = nullptr;
 	networkEventDispatcher.dispatch(&NetworkEventHandler::onPeerDisconnect, *player, reason);
 }
@@ -533,19 +530,9 @@ template <size_t ID>
 void RakNetLegacyNetwork::RPCHook(RakNet::RPCParameters* rpcParams, void* extra)
 {
 	RakNetLegacyNetwork* network = reinterpret_cast<RakNetLegacyNetwork*>(extra);
-	const RakNet::PlayerIndex senderId = rpcParams->senderIndex;
-
-	if (senderId >= network->playerFromRakIndex.size())
-	{
-		return;
-	}
-
-	IPlayer* player = network->playerFromRakIndex[senderId];
-
-	if (player == nullptr)
-	{
-		return;
-	}
+	
+	IPlayer* player = core->getPlayers()->get(rpcParams->senderId);
+	if(!player) return;
 
 	NetworkBitStream bs = GetBitStream(*rpcParams);
 
@@ -809,8 +796,6 @@ void RakNetLegacyNetwork::start()
 	lastCookieSeed = Time::now();
 	SAMPRakNet::SeedCookie();
 
-	playerFromRakIndex.fill(nullptr);
-
 	IConfig& config = core->getConfig();
 	int maxPlayers = *config.getInt("max_players");
 
@@ -887,13 +872,7 @@ void RakNetLegacyNetwork::onTick(Microseconds elapsed, TimePoint now)
 {
 	for (RakNet::Packet* pkt = rakNetServer.Receive(); pkt; pkt = rakNetServer.Receive())
 	{
-		if (pkt->playerIndex >= playerFromRakIndex.size())
-		{
-			rakNetServer.DeallocatePacket(pkt);
-			continue;
-		}
-
-		IPlayer* player = playerFromRakIndex[pkt->playerIndex];
+		IPlayer* player = core->getPlayers->get(pkt->playerIndex);
 		if (player)
 		{
 			NetworkBitStream bs(pkt->data, pkt->length, false);
