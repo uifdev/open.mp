@@ -502,13 +502,14 @@ void RakNetLegacyNetwork::OnNPCConnect(RakNet::RPCParameters* rpcParams, void* e
 	}
 }
 
-void RakNetLegacyNetwork::OnRakNetDisconnect(RakNet::PlayerIndex playerID, PeerDisconnectReason reason)
+void RakNetLegacyNetwork::OnClientDisconnect(RakNet::Packet* pkt, PeerDisconnectReason reason)
 {
+	int playerID = pkt->playerIndex;
 	IPlayer* player = core->getPlayers().get(playerID);
 
 	if (!player)
 	{
-		core->logLn(LogLevel::Debug,"Player %d disconnected and has no player object!",playerID);
+		core->logLn(LogLevel::Debug,"No player instance for player ID %d",playerID);
 		return;
 	}
 
@@ -858,18 +859,18 @@ void RakNetLegacyNetwork::start()
 	}
 }
 
-void RaknetLegacyNetwork::OnNewIncomingConnection(RakNet::Packet* pkt)
+void RaknetLegacyNetwork::OnClientConnect(RakNet::Packet* pkt)
 {
 	int playerID = pkt->playerIndex;
 	PeerAddress address;
 	PeerAddress::AddressString addressString;
-	address.v4 = packet->playerId.binaryAddress;
+	address.v4 = pkt->playerId.binaryAddress;
 	address.ipv6 = false;
 	PeerAddress::ToString(address, addressString);
-	uint16_t packet->playerId.port;
+	uint16_t pkt->playerId.port;
 
-	network->core->logLn(LogLevel::Message,"[connection] incoming connection: %s:%d id: %d",addressString.data(),port,playerID);
-	network->core->getPlayers()->getPlayerConnectDispatcher().dispatch(&PlayerConnectEventHandler::onIncomingConnection, playerID, addressString, port);
+	core->logLn(LogLevel::Message,"[connection] incoming connection: %s:%d id: %d",addressString.data(),port,playerID);
+	core->getPlayers()->getPlayerConnectDispatcher().dispatch(&PlayerConnectEventHandler::onIncomingConnection, playerID, addressString, port);
 }
 
 void RakNetLegacyNetwork::onTick(Microseconds elapsed, TimePoint now)
@@ -882,15 +883,15 @@ void RakNetLegacyNetwork::onTick(Microseconds elapsed, TimePoint now)
 			
 		if(type == RakNet::ID_NEW_INCOMING_CONNECTION) 
 		{
-			OnNewIncomingConnection(pkt);
+			OnClientConnect(pkt);
 		}
 		else if (type == RakNet::ID_DISCONNECTION_NOTIFICATION)
 		{
-			OnRakNetDisconnect(pkt->playerIndex, PeerDisconnectReason_Quit);
+			OnClientDisconnect(pkt, PeerDisconnectReason_Quit);
 		}
 		else if (type == RakNet::ID_CONNECTION_LOST)
 		{
-			OnRakNetDisconnect(pkt->playerIndex, PeerDisconnectReason_Timeout);
+			OnClientDisconnect(pkt, PeerDisconnectReason_Timeout);
 		}
 		else
 		{
