@@ -1763,12 +1763,6 @@ public:
 
 	virtual void vlogLnInternal(LogLevel level, bool utf8, const char* fmt, va_list args)
 	{
-#ifndef _DEBUG
-		if (level == LogLevel::Debug)
-		{
-			return;
-		}
-#endif
 
 #ifdef BUILD_WINDOWS
 		_lock_locales();
