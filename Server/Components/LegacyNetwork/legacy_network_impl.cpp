@@ -347,6 +347,7 @@ IPlayer* RakNetLegacyNetwork::OnPeerConnect(RakNet::RPCParameters* rpcParams, bo
 	else
 	{
 		newConnectionResult.first = NewConnectionResult_VersionMismatch;
+		core->logLn(LogLevel:Debug,"Version mismatch: %.*s (%d)",int(versionName.length()), versionName.data(), version);
 	}
 
 	if (newConnectionResult.first != NewConnectionResult_Success)
