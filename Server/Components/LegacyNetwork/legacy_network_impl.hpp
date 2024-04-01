@@ -275,8 +275,8 @@ public:
 	void init(ICore* core);
 	void start();
 
-	void OnRakNetDisconnect(RakNet::PlayerIndex rid, PeerDisconnectReason reason);
-	void OnNewIncomingConnection(RakNet::Packet* pkt);
+	void OnClientDisconnect(RakNet::Packet* pkt, PeerDisconnectReason reason);
+	void OnClientConnect(RakNet::Packet* pkt);
 
 	void onPlayerScoreChange(IPlayer& player, int score) override
 	{
