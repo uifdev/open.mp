@@ -1668,17 +1668,19 @@ struct PlayerPool final : public IPlayerPool, public NetworkEventHandler, public
 				
 		player = storage.get(playerID);
 		if(player) {
-			core.logLn(LogLevel::Debug,"Player ID %d already has a player object",playerID);
+			core.logLn(LogLevel::Debug,"Player ID %d already has a player instance",playerID);
 			return { NewConnectionResult_NoPlayerSlot, nullptr };
 		}
 				
 		if (params.bot && botList.size() >= *maxBots)
 		{
+			core.logLn(LogLevel::Debug,"Max number of NPCs reached");
 			return { NewConnectionResult_NoPlayerSlot, nullptr };
 		}
 
 		if (!isNameValid(params.name) || isNameTaken(params.name, nullptr))
 		{
+			core.logLn(LogLevel::Debug,"Name %s already taken",params.name);
 			return { NewConnectionResult_BadName, nullptr };
 		}
 
@@ -1686,7 +1688,7 @@ struct PlayerPool final : public IPlayerPool, public NetworkEventHandler, public
 		
 		player = storage.get(poolID);
 		if(!player) {
-			core.logLn(LogLevel::Debug,"Couldn't create a player object for player ID %d",playerID);
+			core.logLn(LogLevel::Debug,"Couldn't create a player instance for player ID %d",playerID);
 			return { NewConnectionResult_NoPlayerSlot, nullptr };
 		}
 
