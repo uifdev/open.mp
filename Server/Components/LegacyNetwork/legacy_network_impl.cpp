@@ -873,7 +873,7 @@ void RakNetLegacyNetwork::OnClientConnect(RakNet::Packet* pkt)
 	core->logLn(LogLevel::Message,"[connection] incoming connection: %s:%d id: %d",addressString.data(),port,playerID);
 	
 	auto playerConnectDispatcher = reinterpret_cast<DefaultEventDispatcher<PlayerConnectEventHandler>*>(&core->getPlayers().getPlayerConnectDispatcher());
-	if(playerConnectDispatcher) playerConnectDispatcher.dispatch(&PlayerConnectEventHandler::onIncomingConnection, playerID, addressString, port);
+	if(playerConnectDispatcher) playerConnectDispatcher->dispatch(&PlayerConnectEventHandler::onIncomingConnection, playerID, addressString, port);
 	
 	////core->getPlayers().getPlayerConnectDispatcher().dispatch(&PlayerConnectEventHandler::onIncomingConnection, playerID, addressString, port);
 }
