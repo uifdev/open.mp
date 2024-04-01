@@ -858,16 +858,44 @@ void RakNetLegacyNetwork::start()
 	}
 }
 
+void RaknetLegacyNetwork::OnNewIncomingConnection(RakNet::Packet* pkt)
+{
+	int playerID = pkt->playerIndex;
+	PeerAddress address;
+	PeerAddress::AddressString addressString;
+	address.v4 = packet->playerId.binaryAddress;
+	address.ipv6 = false;
+	PeerAddress::ToString(address, addressString);
+	uint16_t packet->playerId.port;
+
+	network->core->logLn(LogLevel::Message,"[connection] incoming connection: %s:%d id: %d",addressString.data(),port,playerID);
+	network->core->getPlayers()->getPlayerConnectDispatcher().dispatch(&PlayerConnectEventHandler::onIncomingConnection, playerID, addressString, port);
+}
+
 void RakNetLegacyNetwork::onTick(Microseconds elapsed, TimePoint now)
 {
 	for (RakNet::Packet* pkt = rakNetServer.Receive(); pkt; pkt = rakNetServer.Receive())
 	{
-		IPlayer* player = core->getPlayers().get(pkt->playerIndex);
-		if (player)
+		NetworkBitStream bs(pkt->data, pkt->length, false);
+		uint8_t type;
+		bs.readUINT8(type);
+			
+		if(type == RakNet::ID_NEW_INCOMING_CONNECTION) 
 		{
-			NetworkBitStream bs(pkt->data, pkt->length, false);
-			uint8_t type;
-			if (bs.readUINT8(type))
+			OnNewIncomingConnection(pkt);
+		}
+		else if (type == RakNet::ID_DISCONNECTION_NOTIFICATION)
+		{
+			OnRakNetDisconnect(pkt->playerIndex, PeerDisconnectReason_Quit);
+		}
+		else if (type == RakNet::ID_CONNECTION_LOST)
+		{
+			OnRakNetDisconnect(pkt->playerIndex, PeerDisconnectReason_Timeout);
+		}
+		else
+		{
+			IPlayer* player = core->getPlayers().get(pkt->playerIndex);
+			if (player)
 			{
 				// Call event handlers for packet receive
 				const bool res = inEventDispatcher.stopAtFalse([&player, type, &bs](NetworkInEventHandler* handler)
@@ -875,7 +903,7 @@ void RakNetLegacyNetwork::onTick(Microseconds elapsed, TimePoint now)
 						bs.SetReadOffset(8); // Ignore packet ID
 						return handler->onReceivePacket(*player, type, bs);
 					});
-
+		
 				if (res)
 				{
 					packetInEventDispatcher.stopAtFalse(type, [&player, &bs](SingleNetworkInEventHandler* handler)
@@ -883,15 +911,6 @@ void RakNetLegacyNetwork::onTick(Microseconds elapsed, TimePoint now)
 							bs.SetReadOffset(8); // Ignore packet ID
 							return handler->onReceive(*player, bs);
 						});
-				}
-
-				if (type == RakNet::ID_DISCONNECTION_NOTIFICATION)
-				{
-					OnRakNetDisconnect(pkt->playerIndex, PeerDisconnectReason_Quit);
-				}
-				else if (type == RakNet::ID_CONNECTION_LOST)
-				{
-					OnRakNetDisconnect(pkt->playerIndex, PeerDisconnectReason_Timeout);
 				}
 			}
 		}
