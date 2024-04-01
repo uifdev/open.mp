@@ -347,7 +347,7 @@ IPlayer* RakNetLegacyNetwork::OnPeerConnect(RakNet::RPCParameters* rpcParams, bo
 	else
 	{
 		newConnectionResult.first = NewConnectionResult_VersionMismatch;
-		core->logLn(LogLevel:Debug,"Version mismatch: %.*s (%d)",int(versionName.length()), versionName.data(), version);
+		core->logLn(LogLevel::Debug,"Version mismatch: %.*s (%d)",int(versionName.length()), versionName.data(), version);
 	}
 
 	if (newConnectionResult.first != NewConnectionResult_Success)
@@ -860,7 +860,7 @@ void RakNetLegacyNetwork::start()
 	}
 }
 
-void RaknetLegacyNetwork::OnClientConnect(RakNet::Packet* pkt)
+void RakNetLegacyNetwork::OnClientConnect(RakNet::Packet* pkt)
 {
 	int playerID = pkt->playerIndex;
 	PeerAddress address;
@@ -868,10 +868,10 @@ void RaknetLegacyNetwork::OnClientConnect(RakNet::Packet* pkt)
 	address.v4 = pkt->playerId.binaryAddress;
 	address.ipv6 = false;
 	PeerAddress::ToString(address, addressString);
-	uint16_t pkt->playerId.port;
+	uint16_t port = pkt->playerId.port;
 
 	core->logLn(LogLevel::Message,"[connection] incoming connection: %s:%d id: %d",addressString.data(),port,playerID);
-	core->getPlayers()->getPlayerConnectDispatcher().dispatch(&PlayerConnectEventHandler::onIncomingConnection, playerID, addressString, port);
+	core->getPlayers().getPlayerConnectDispatcher().dispatch(&PlayerConnectEventHandler::onIncomingConnection, playerID, addressString, port);
 }
 
 void RakNetLegacyNetwork::onTick(Microseconds elapsed, TimePoint now)
