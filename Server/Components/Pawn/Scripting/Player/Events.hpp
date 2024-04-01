@@ -41,10 +41,10 @@ public:
 		PawnManager::Get()->CallAllInEntryFirst("OnPlayerKeyStateChange", DefaultReturnValue_True, player.getID(), newKeys, oldKeys);
 	}
 
-	void onIncomingConnection(IPlayer& player, StringView ipAddress, unsigned short port) override
+	void onIncomingConnection(int playerID, StringView ipAddress, unsigned short port) override
 	{
-		PawnManager::Get()->CallInSidesWhile0("OnIncomingConnection", player.getID(), ipAddress, port);
-		PawnManager::Get()->CallInEntry("OnIncomingConnection", DefaultReturnValue_True, player.getID(), ipAddress, port);
+		PawnManager::Get()->CallInSidesWhile0("OnIncomingConnection", playerID, ipAddress, port);
+		PawnManager::Get()->CallInEntry("OnIncomingConnection", DefaultReturnValue_True, playerID, ipAddress, port);
 	}
 
 	void onPlayerDisconnect(IPlayer& player, PeerDisconnectReason reason) override
