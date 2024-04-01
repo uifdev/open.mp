@@ -1680,7 +1680,7 @@ struct PlayerPool final : public IPlayerPool, public NetworkEventHandler, public
 
 		if (!isNameValid(params.name) || isNameTaken(params.name, nullptr))
 		{
-			core.logLn(LogLevel::Debug,"Name %s already taken",params.name);
+			core.logLn(LogLevel::Debug,"Name already taken");
 			return { NewConnectionResult_BadName, nullptr };
 		}
 
