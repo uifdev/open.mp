@@ -871,7 +871,7 @@ void RakNetLegacyNetwork::OnClientConnect(RakNet::Packet* pkt)
 	uint16_t port = pkt->playerId.port;
 
 	core->logLn(LogLevel::Message,"[connection] incoming connection: %s:%d id: %d",addressString.data(),port,playerID);
-	core->getPlayers().getPlayerConnectDispatcher().dispatch(&PlayerConnectEventHandler::onIncomingConnection, playerID, addressString, port);
+	////core->getPlayers().getPlayerConnectDispatcher().dispatch(&PlayerConnectEventHandler::onIncomingConnection, playerID, addressString, port);
 }
 
 void RakNetLegacyNetwork::onTick(Microseconds elapsed, TimePoint now)
