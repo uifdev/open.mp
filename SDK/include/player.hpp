@@ -931,7 +931,7 @@ struct PlayerSpawnEventHandler
 /// Player connection event handlers
 struct PlayerConnectEventHandler
 {
-	virtual void onIncomingConnection(IPlayer& player, StringView ipAddress, unsigned short port) { }
+	virtual void onIncomingConnection(int playerID, StringView ipAddress, unsigned short port) { }
 	virtual void onPlayerConnect(IPlayer& player) { }
 	virtual void onPlayerDisconnect(IPlayer& player, PeerDisconnectReason reason) { }
 	virtual void onPlayerClientInit(IPlayer& player) { }
