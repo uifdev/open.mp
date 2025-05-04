@@ -66,7 +66,7 @@ const FlatHashMap<StringView, ParamType> types = {
 	{ "timestamp", ParamType::Bool },
 	{ "logtimeformat", ParamType::String },
 	{ "logqueries", ParamType::Bool },
-	{ "chatlogging", ParamType::Custom },
+	{ "chatlogging", ParamType::Bool },
 	{ "db_logging", ParamType::Bool },
 	{ "db_log_queries", ParamType::Bool },
 	{ "onfoot_rate", ParamType::Int },
