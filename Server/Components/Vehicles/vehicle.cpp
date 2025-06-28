@@ -381,6 +381,8 @@ bool Vehicle::updateFromTrailerSync(const VehicleTrailerSyncPacket& trailerSync,
 
 bool Vehicle::updateFromPassengerSync(const VehiclePassengerSyncPacket& passengerSync, IPlayer& player)
 {
+	self.core.logLn(LogLevel::Message, "[passenger] %.*s passenger sync",PRINT_VIEW(player.name_));
+	
 	PlayerVehicleData* data = queryExtension<PlayerVehicleData>(player);
 	if (!data)
 	{
@@ -396,7 +398,7 @@ bool Vehicle::updateFromPassengerSync(const VehiclePassengerSyncPacket& passenge
 	{
 		// Can't be a passenger there.  NOT an OBOE.
 		// Just ignore the packet for now.
-		return false;
+		//return false;
 	}
 	else if ((data->getVehicle() != this || driver == &player) && passengers.insert(&player).second)
 	{
