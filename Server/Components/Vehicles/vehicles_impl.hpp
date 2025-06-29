@@ -48,7 +48,7 @@ private:
 				return false;
 			}
 
-			if (!lock.entry->isStreamedInForPlayer(peer) || peer.getState() != PlayerState_OnFoot)
+			if (peer.getState() != PlayerState_OnFoot)
 			{
 				return false;
 			}
