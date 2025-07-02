@@ -391,7 +391,7 @@ public:
 		return carriages;
 	}
 
-	bool isTrainCarriage() override
+	bool isTrainCarriage()
 	{
 		const int model = getModel();
 		if (model == 569 || model == 570)
